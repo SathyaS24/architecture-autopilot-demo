@@ -1,0 +1,29 @@
+{
+  "name": "architecture-autopilot-analyzer",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "AST parsing, dependency graph construction, and architecture analysis for Architecture Autopilot",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "architecture-analyzer": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "ast",
+    "architecture",
+    "dependency-graph",
+    "typescript",
+    "static-analysis"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^26.4.0",
+    "typescript": "^5.5.4",
+    "vitest": "^4.1.11"
+  }
+}

@@ -1,9 +1,14 @@
+import { IPaymentService } from './payment.interface.js';
 import { PaymentService } from './payment.service.js';
 import { OrderRepository } from '../repositories/order.repository.js';
 
 export class OrderService {
-  private paymentService = new PaymentService();
+  private paymentService: IPaymentService;
   private orderRepo = new OrderRepository();
+
+  constructor(paymentService: IPaymentService = new PaymentService()) {
+    this.paymentService = paymentService;
+  }
 
   async placeOrder(order: any) {
     const saved = await this.orderRepo.save(order);

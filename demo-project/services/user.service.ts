@@ -6,4 +6,8 @@ export class UserService {
   async getUser(id: string) {
     return this.userRepo.findById(id);
   }
+
+  async getRawUser(id: string) {
+    return this.userRepo.findById(id);
+  }
 }

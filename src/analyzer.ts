@@ -1,15 +1,56 @@
 import path from 'path';
+import fs from 'fs';
 import { findTsFiles, parseTsFile } from './parser.js';
 import { DependencyGraph } from './graph.js';
 import { findCycles } from './cycles.js';
 import { detectLayerViolations } from './layers.js';
 import { generateReport } from './report.js';
 import { ArchReport, FileInfo } from './types.js';
+import { ArchaeologyReport } from './archaeology.js';
+import { getGitHistory, normalizePath } from './git.js';
+import { calculateCoChanges } from './cochange.js';
+import { classifyDebtAndSafety } from './classifier.js';
 
 export interface AnalyzerResult {
   report: ArchReport;
   files: Map<string, FileInfo>;
   graph: DependencyGraph;
+  archaeology?: ArchaeologyReport;
+}
+
+/**
+ * Public function to run Git Archaeology analysis.
+ */
+export function runArchaeology(targetDir: string, filesList: string[]): ArchaeologyReport {
+  const resolvedTarget = normalizePath(targetDir);
+  const warnings: string[] = [];
+
+  const commits = getGitHistory(resolvedTarget);
+  if (commits.length === 0) {
+    warnings.push('No Git history found or Git is not available.');
+  }
+
+  const normalizedFilesList = filesList.map((file) => normalizePath(file));
+
+  const filesResults = normalizedFilesList.map((file) => {
+    const fileCommits = commits.filter((c) => c.changedFiles.includes(file));
+    const classificationResult = classifyDebtAndSafety(file, fileCommits);
+
+    return {
+      file,
+      ...classificationResult,
+      commitHistory: fileCommits,
+    };
+  });
+
+  const coChanges = calculateCoChanges(commits, normalizedFilesList);
+
+  return {
+    analyzedPath: resolvedTarget,
+    files: filesResults,
+    coChanges,
+    warnings,
+  };
 }
 
 /**
@@ -50,9 +91,17 @@ export function analyzeProject(targetDir: string): AnalyzerResult {
     violations
   );
 
+  let archaeology: ArchaeologyReport | undefined;
+  try {
+    archaeology = runArchaeology(resolvedTarget, Array.from(filesMap.keys()));
+  } catch (err: any) {
+    // Gracefully ignore and fallback
+  }
+
   return {
     report,
     files: filesMap,
     graph,
+    archaeology,
   };
 }

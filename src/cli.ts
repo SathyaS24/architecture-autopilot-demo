@@ -10,7 +10,7 @@ function run() {
   console.log(`Analyzing: ${resolvedTarget}\n`);
 
   try {
-    const { report } = analyzeProject(resolvedTarget);
+    const { report, archaeology } = analyzeProject(resolvedTarget);
 
     console.log(`Found ${report.analyzedFileCount} TypeScript files.\n`);
 
@@ -52,6 +52,47 @@ function run() {
       console.log();
     } else {
       console.log(`Layer Violations: None\n`);
+    }
+
+    if (archaeology) {
+      console.log(`Git Archaeology`);
+      if (archaeology.warnings.length > 0) {
+        archaeology.warnings.forEach((warn) => console.log(`  Warning: ${warn}`));
+        console.log();
+      } else {
+        console.log(`  Analyzed files: ${archaeology.files.length}`);
+        console.log(`  Total historical commits mined: ${new Set(archaeology.files.flatMap((f) => f.commitHistory.map((c) => c.sha))).size}`);
+        console.log();
+
+        console.log(`  File Classifications & Refactoring Safety:`);
+        archaeology.files.forEach((fileRes) => {
+          const relPath = path.relative(resolvedTarget, fileRes.file);
+          const safety = fileRes.safeToRefactor ? 'SAFE TO REFACTOR' : 'LOCKED (UNSAFE)';
+          console.log(`    - ${relPath}:`);
+          console.log(`        Classification: ${fileRes.classification}`);
+          console.log(`        Safety Status:  ${safety}`);
+          console.log(`        Confidence:     ${(fileRes.confidence * 100).toFixed(0)}%`);
+          console.log(`        Reason:         ${fileRes.reason}`);
+          if (fileRes.supportingCommitSha) {
+            console.log(`        Evidence:       Commit ${fileRes.supportingCommitSha.substring(0, 7)}: "${fileRes.supportingCommitMessage}"`);
+          }
+        });
+        console.log();
+
+        if (archaeology.coChanges.length > 0) {
+          console.log(`  Historical File Co-Changes (Logical Coupling):`);
+          archaeology.coChanges.slice(0, 10).forEach((cc) => {
+            const relA = path.relative(resolvedTarget, cc.fileA);
+            const relB = path.relative(resolvedTarget, cc.fileB);
+            console.log(`    - ${relA} <-> ${relB}:`);
+            console.log(`        Co-Changes:     ${cc.coChangeCount} commits`);
+            console.log(`        Coupling Strength: ${(cc.strength * 100).toFixed(1)}%`);
+          });
+          console.log();
+        } else {
+          console.log(`  Historical File Co-Changes: None detected\n`);
+        }
+      }
     }
 
     // Return non-zero status code if critical issues are found, to be CI-friendly

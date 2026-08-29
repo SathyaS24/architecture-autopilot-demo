@@ -1,6 +1,10 @@
-export { analyzeProject, AnalyzerResult } from './analyzer.js';
+export { analyzeProject, AnalyzerResult, runArchaeology } from './analyzer.js';
 export { DependencyGraph } from './graph.js';
 export { findCycles } from './cycles.js';
 export { detectLayerViolations } from './layers.js';
 export { calculateHealthScore, generateReport } from './report.js';
 export * from './types.js';
+export * from './archaeology.js';
+export { getGitHistory, findGitExecutable, runGitCommand, parseGitLog } from './git.js';
+export { calculateCoChanges } from './cochange.js';
+export { classifyChangeIntent, classifyDebtAndSafety } from './classifier.js';

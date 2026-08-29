@@ -7,7 +7,11 @@ export class OrderService {
 
   async placeOrder(order: any) {
     const saved = await this.orderRepo.save(order);
-    return this.paymentService.processPayment(saved);
+    const paymentResult = await this.paymentService.processPayment(saved);
+    if (paymentResult.success) {
+      await this.updateOrderStatus(saved.id, 'paid');
+    }
+    return paymentResult;
   }
 
   async updateOrderStatus(orderId: string, status: string) {

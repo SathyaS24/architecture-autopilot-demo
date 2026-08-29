@@ -1,4 +1,4 @@
-import { expect, test, describe } from 'vitest';
+import { expect, test, describe, vi } from 'vitest';
 import path from 'path';
 import { DependencyGraph } from '../src/graph.js';
 import { findCycles } from '../src/cycles.js';
@@ -7,6 +7,7 @@ import { detectLayer, resolveImportPath } from '../src/parser.js';
 import { detectLayerViolations } from '../src/layers.js';
 import { analyzeProject } from '../src/analyzer.js';
 import { FileInfo } from '../src/types.js';
+import { OrderService } from '../demo-project/services/order.service.js';
 
 describe('Dependency Graph Operations', () => {
   test('should construct a directed graph correctly', () => {
@@ -154,16 +155,27 @@ describe('Integration: Demo Project Analysis', () => {
     const { report } = analyzeProject(demoDir);
 
     expect(report.analyzedFileCount).toBe(7);
-    expect(report.dependencyCount).toBe(7);
+    expect(report.dependencyCount).toBe(6);
 
-    // There is one cycle between order.service.ts and payment.service.ts
-    expect(report.cycleCount).toBe(1);
-    const cycleFileBasenames = report.cycles[0].map((f) => path.basename(f)).sort();
-    expect(cycleFileBasenames).toEqual(['order.service.ts', 'payment.service.ts']);
+    // Circular dependency is now resolved
+    expect(report.cycleCount).toBe(0);
+    expect(report.cycles).toEqual([]);
 
     // There is one layer violation where UserController imports UserRepository
     expect(report.layerViolationCount).toBe(1);
     expect(path.basename(report.violations[0].sourceFile)).toBe('user.controller.ts');
     expect(path.basename(report.violations[0].targetFile)).toBe('user.repository.ts');
+  });
+});
+
+describe('Demo Project: Order and Payment Flow', () => {
+  test('should update order status to paid on successful payment', async () => {
+    const orderService = new OrderService();
+    const updateSpy = vi.spyOn(orderService, 'updateOrderStatus');
+
+    const result = await orderService.placeOrder({ id: '123', amount: 100 });
+
+    expect(result.success).toBe(true);
+    expect(updateSpy).toHaveBeenCalledWith('123', 'paid');
   });
 });

@@ -10,8 +10,13 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "vitest run"
+    "test": "vitest run",
+    "ui:dev": "npm --prefix packages/ui run dev",
+    "ui:build": "npm --prefix packages/ui run build"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "keywords": [
     "ast",
     "architecture",

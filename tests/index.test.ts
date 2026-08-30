@@ -154,17 +154,16 @@ describe('Integration: Demo Project Analysis', () => {
     const demoDir = path.resolve(__dirname, '../demo-project');
     const { report } = analyzeProject(demoDir);
 
-    expect(report.analyzedFileCount).toBe(7);
-    expect(report.dependencyCount).toBe(6);
+    expect(report.analyzedFileCount).toBe(8);
+    expect(report.dependencyCount).toBe(7);
 
     // Circular dependency is now resolved
     expect(report.cycleCount).toBe(0);
     expect(report.cycles).toEqual([]);
 
-    // There is one layer violation where UserController imports UserRepository
-    expect(report.layerViolationCount).toBe(1);
-    expect(path.basename(report.violations[0].sourceFile)).toBe('user.controller.ts');
-    expect(path.basename(report.violations[0].targetFile)).toBe('user.repository.ts');
+    // Layer violation is now resolved
+    expect(report.layerViolationCount).toBe(0);
+    expect(report.violations).toEqual([]);
   });
 });
 

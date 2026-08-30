@@ -1,6 +1,9 @@
-export class PaymentService {
+import { IPaymentService } from './payment.interface.js';
+
+export class PaymentService implements IPaymentService {
   async processPayment(order: any) {
-    // PaymentService handles payment logic independently and returns the transaction state
+    // PaymentService handles payment logic independently
+    // and returns the transaction state.
     return { success: true };
   }
 }
